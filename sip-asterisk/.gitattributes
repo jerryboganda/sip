@@ -1,0 +1,10 @@
+# Force LF on everything that runs inside the Linux container / on the VPS.
+# CRLF in shell scripts or the entrypoint breaks `sh`/`bash` inside containers.
+* text=auto eol=lf
+*.sh    text eol=lf
+*.conf  text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+
+# Local Windows helper scripts keep CRLF.
+*.ps1   text eol=crlf

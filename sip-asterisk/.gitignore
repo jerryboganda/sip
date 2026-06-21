@@ -1,0 +1,15 @@
+# Secrets / environment
+.env
+
+# Rendered configs (generated from config-templates by render-config.sh)
+/etc/
+
+# Runtime data (bind-mounted into the container)
+/logs/
+/spool/
+/lib/
+/recordings/
+
+# Backups
+/backup/
+*.tar.gz

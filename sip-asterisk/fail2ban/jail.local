@@ -1,0 +1,28 @@
+# Install on the VPS host: copy to /etc/fail2ban/jail.local
+# and the filter to /etc/fail2ban/filter.d/asterisk-security.conf, then:
+#   systemctl enable --now fail2ban && fail2ban-client status
+#
+# logpath points at the bind-mounted Asterisk "security" log on the host
+# (logger.conf writes the security channel -> /var/log/asterisk/security ->
+#  host ./logs/security under /opt/stacks/sip-asterisk).
+
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+backend  = auto
+# Do not ban your own admin IP — add it here (space-separated):
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+
+[asterisk-security]
+enabled  = true
+filter   = asterisk-security
+port     = 5060,5061
+protocol = udp
+logpath  = /opt/stacks/sip-asterisk/logs/security
+maxretry = 5
+bantime  = 1h
+action   = iptables-allports[name=asterisk, protocol=all]

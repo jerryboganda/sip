@@ -1,0 +1,38 @@
+# =============================================================================
+# Dedicated SIP stack. Deploy to: /opt/stacks/sip-asterisk
+# Uses host networking so SIP (5060) and the RTP range (10000-20000) bind
+# directly to the VPS interface. Port publishing is intentionally omitted
+# (ignored under network_mode: host).
+# =============================================================================
+services:
+  asterisk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sip-asterisk:22
+    container_name: sip-asterisk
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - ./etc:/etc/asterisk
+      - ./logs:/var/log/asterisk
+      - ./spool:/var/spool/asterisk
+      - ./lib:/var/lib/asterisk
+      - ./recordings:/var/spool/asterisk/monitor
+    environment:
+      TZ: ${TZ:-Asia/Karachi}
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "asterisk -rx 'core show uptime' >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

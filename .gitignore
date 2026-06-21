@@ -1,0 +1,20 @@
+# Secrets / environment (never commit a real .env)
+**/.env
+.env
+
+# Generated Asterisk configs (rendered from config-templates by render-config.sh)
+sip-asterisk/etc/
+
+# Runtime data (bind-mounted into the container)
+sip-asterisk/logs/
+sip-asterisk/spool/
+sip-asterisk/lib/
+sip-asterisk/recordings/
+
+# Backups / archives
+sip-asterisk/backup/
+*.tar.gz
+
+# OS / editor junk
+Thumbs.db
+.DS_Store
