@@ -1,24 +1,21 @@
 # =============================================================================
 # Dedicated SIP stack. Deploy to: /opt/stacks/sip-asterisk
-# Uses host networking so SIP (5060) and the RTP range (10000-20000) bind
-# directly to the VPS interface. Port publishing is intentionally omitted
-# (ignored under network_mode: host).
+# Asterisk 22 via the prebuilt andrius/asterisk image (built from official
+# Asterisk source). Pinned by digest = Asterisk 22.9.0.
+# Host networking so SIP (5060) and the RTP range (10000-20000) bind directly
+# to the VPS interface (port publishing is ignored under network_mode: host).
+# Only ./etc (our configs) and ./logs are bind-mounted, so the image's bundled
+# sounds/keys/astdb under /var/lib/asterisk stay intact.
 # =============================================================================
 services:
   asterisk:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: sip-asterisk:22
+    image: andrius/asterisk:latest@sha256:13730f0dbee96772a8932c181cfee5ca9529f3edf8abf0bca28c381815aa54a6
     container_name: sip-asterisk
     network_mode: "host"
     restart: unless-stopped
     volumes:
       - ./etc:/etc/asterisk
       - ./logs:/var/log/asterisk
-      - ./spool:/var/spool/asterisk
-      - ./lib:/var/lib/asterisk
-      - ./recordings:/var/spool/asterisk/monitor
     environment:
       TZ: ${TZ:-Asia/Karachi}
     ulimits:

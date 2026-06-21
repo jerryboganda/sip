@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 04-deploy.sh — render config, build, and start the SIP stack. RUN ON THE VPS.
+# 04-deploy.sh — render config, pull image, and start the SIP stack. RUN ON THE VPS.
 # Location: /opt/stacks/sip-asterisk
 # =============================================================================
 set -euo pipefail
@@ -16,10 +16,12 @@ echo "== Rendering Asterisk configs =="
 bash scripts/render-config.sh
 
 echo "== Ensuring runtime directories =="
-mkdir -p etc logs spool lib recordings backup
+mkdir -p etc logs backup
+# Asterisk runs as uid 1000 (asterisk) inside the image; make logs writable.
+chown -R 1000:1000 logs 2>/dev/null || true
 
-echo "== Building image =="
-docker compose build
+echo "== Pulling Asterisk image =="
+docker compose pull
 
 echo "== Starting stack =="
 docker compose up -d
