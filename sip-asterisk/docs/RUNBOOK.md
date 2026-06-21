@@ -6,14 +6,14 @@ requests to the SIP trunk provider.
 
 ---
 
-## Phase 0 — Provider requirements & authorized CLI  [PROVIDER]
+## Phase 0 — Provider requirements  [PROVIDER]
 
 Collect from the provider before touching the VPS (see
 [provider-onboarding.md](provider-onboarding.md)):
 
 - Signaling IP(s) to whitelist, RTP/media IP(s)
 - Gateway / outbound proxy IP, SIP port (usually 5060/UDP)
-- Authorized DID/CLI list, number format (E.164), codecs, DTMF
+- Number format (E.164), codecs, DTMF (CLI is pass-through; provider screens it)
 - Max channels / CPS, allowed destinations, test number, CDR portal
 
 Then on the VPS:
@@ -21,10 +21,10 @@ Then on the VPS:
 ```bash
 cp .env.example .env
 nano .env   # PROVIDER_GATEWAY_IP, PROVIDER_SIGNALING_IP(S), PROVIDER_RTP_IPS,
-            # AUTHORIZED_CLI, ADMIN_IP
+            # ADMIN_IP   (no AUTHORIZED_CLI — CLI is pass-through)
 ```
 
-> Do not continue to production calling until provider IPs + authorized CLI are known.
+> Do not continue to production calling until the provider IPs are known and they have whitelisted our IP.
 
 ---
 
@@ -148,7 +148,7 @@ docker exec -it sip-asterisk sngrep                 # live SIP trace
 docker exec -it sip-asterisk asterisk -rx "pjsip set logger on"
 ```
 Order: OPTIONS/qualify → outbound to provider test number → call your mobile →
-two-way audio → CLI matches `AUTHORIZED_CLI` → provider CDR → negative CLI test.
+two-way audio → CLI passes through as your app sent it → provider CDR.
 Full matrix: [testing-checklist.md](testing-checklist.md).
 
 ---
@@ -204,7 +204,7 @@ If unreachable: restore the snapshot or `ufw disable` from the provider console.
 4. DNS correct.
 5. Firewall applied (admin + provider IPs only).
 6. Config rendered; container built and running.
-7. Provider whitelisted our IP + authorized CLI.
-8. OPTIONS OK → first call → two-way audio → CLI verified → CDR confirmed.
+7. Provider whitelisted our IP (IP-auth); CLI/number screening is provider-side.
+8. OPTIONS OK → first call → two-way audio → CLI passes through → CDR confirmed.
 9. Fail2ban + fraud controls active.
 10. Backups + monitoring scheduled; SSH/NPM/admin locked down; config documented.

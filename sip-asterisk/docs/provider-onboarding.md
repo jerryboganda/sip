@@ -9,7 +9,7 @@
 | Gateway / outbound proxy | IP or FQDN | `.env` `PROVIDER_GATEWAY_IP` |
 | IP authentication confirmed | they whitelist `185.252.233.186` | — |
 | SIP port | usually `5060/UDP` | `.env` `SIP_PORT` |
-| Authorized CLI/DID list | exact numbers allowed | `.env` `AUTHORIZED_CLI` |
+| CLI / DID handling | provider screens CLI (we pass through, no local config) | provider side |
 | Number format | E.164, e.g. `923001234567` or `+923...` | dialplan usage |
 | Codecs | `alaw`, `ulaw` (`g729`/`opus`?) | `pjsip.conf` `allow=` |
 | DTMF | RFC4733 / RTP events | `pjsip.conf` `dtmf_mode` |
@@ -18,8 +18,8 @@
 | Test number | echo/test destination | testing |
 | CDR portal / API | billing + debugging | ops |
 
-> Do not proceed to production calling until provider IPs and the authorized
-> CLI list are confirmed.
+> Do not proceed to production calling until the provider IPs are confirmed and
+> they have whitelisted our IP. CLI / number screening is done provider-side.
 
 ## 2. Onboarding request (send to the provider)
 
@@ -32,7 +32,7 @@ Please whitelist our production SIP server for IP authentication:
   SIP TLS:             5061 TCP  (only if we use TLS)
   RTP media range:     10000-20000 UDP
   Authentication:      IP authentication / IP ACL (no registration)
-  Allowed outbound CLI: <list only provider-approved numbers>
+  CLI handling:        pass-through (we send the app's CLI unmodified; you screen)
   Preferred codecs:    alaw, ulaw
   DTMF:                RFC4733
 
@@ -47,9 +47,11 @@ Please confirm:
   8. Max concurrent channels, max CPS, and any daily spend cap.
 ```
 
-## 3. Caller ID rule (compliance)
+## 3. Caller ID rule (pass-through)
 
-Only send CLIs the provider has authorized for this account (your business
-number, purchased DID, or verified CLI). Never send numbers you do not control
-(banks, government, third parties). The dialplan `[outbound]` context already
-forces `AUTHORIZED_CLI` on every call so an app cannot present anything else.
+Per provider instruction, the PBX applies **no** CLI / number restriction. The
+dialplan forwards whatever caller ID, name, number and destination the
+application presents, unmodified, in the From + P-Asserted-Identity +
+Remote-Party-ID headers. The **provider** performs all CLI screening and
+number/destination policy on their side. Ensure your use of caller IDs complies
+with applicable regulations and your agreement with the provider.

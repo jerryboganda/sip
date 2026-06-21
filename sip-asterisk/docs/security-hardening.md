@@ -10,7 +10,8 @@ controls before or together with go-live.
 - **No anonymous/guest SIP** — no anonymous endpoint exists.
 - **AMI disabled** — `manager.conf` `enabled=no` (port 5038 never exposed).
 - **HTTP/ARI disabled** — `http.conf` `enabled=no`.
-- **CLI enforced** — `[outbound]` always sets `CALLERID(num)=AUTHORIZED_CLI`.
+- **CLI pass-through** — caller ID / number forwarded unmodified (From + PAI +
+  RPID); the provider performs all CLI / number screening on their side.
 - **Overload guard** — `asterisk.conf` `maxcalls`/`maxload`.
 - **Least privilege** — Asterisk runs as the `asterisk` user, not root.
 - **Log isolation** — dedicated `security` log channel for Fail2ban.
@@ -37,18 +38,19 @@ fail2ban-client status asterisk-security
 The jail reads `/opt/stacks/sip-asterisk/logs/security` (the bind-mounted
 Asterisk security log) and bans IPs after repeated failures.
 
-## Dialplan / provider fraud controls
+## CLI / number policy — handled by the PROVIDER
 
-Server side (add as needed in `extensions.conf`):
-- Max call duration (e.g. `Set(TIMEOUT(absolute)=3600)`).
-- Allowed country prefixes only; block premium/international unless required.
-- After-hours block if not needed.
+Per provider instruction, NO CLI / number / destination restriction is applied
+on our side (full pass-through). All of the following are enforced provider-side:
+- CLI screening (which caller IDs are accepted).
+- Allowed destinations / country codes; premium & international policy.
+- Max concurrent channels, max CPS, daily spend cap + balance alerts.
 
-Provider side (request explicitly):
-- Max concurrent channels and max CPS.
-- Daily spend cap + balance alerts.
-- International disabled by default; premium destinations disabled.
-- CLI enforcement (reject unauthorized CLI).
+The box is still protected by controls that are NOT CLI restrictions:
+- Provider IP authentication (`type=identify`) + no anonymous SIP.
+- Targeted firewall on 5060/RTP and fail2ban.
+- `asterisk.conf` `maxcalls`/`maxload` overload guard (protects the shared host;
+  not a per-number/CLI restriction).
 
 ## Ongoing
 

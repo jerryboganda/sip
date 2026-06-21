@@ -36,12 +36,12 @@ docker exec -it sip-asterisk asterisk -rx "core show channels"
 2. Outbound call to the provider test/echo number.
 3. Outbound call to your own mobile.
 4. Verify **two-way audio**.
-5. Verify the displayed **CLI == AUTHORIZED_CLI**.
+5. Verify the displayed **CLI = exactly what your app sent** (pass-through; the
+   provider may re-screen on their side).
 6. Check the provider CDR + local `./logs/cdr-csv/Master.csv`.
 7. Check Asterisk logs for warnings/errors.
-8. Negative test: attempt an unauthorized CLI → provider must reject/override.
-9. Test max-duration limit.
-10. Test blocked destinations.
+8. Confirm CLI / number / destination policy is enforced **provider-side** (we
+   apply none) — try a different CLI and a different country code; both should go out.
 
 ## Failure reference
 

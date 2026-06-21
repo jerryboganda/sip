@@ -9,8 +9,8 @@ hardening, and a phased runbook.
 - **Domain:** `sip.polytronx.com`
 - **Engine:** Asterisk 22 (Sangoma/FreePBX Debian 12 packages) in its own Docker
   Compose stack with `network_mode: host`.
-- **Auth model:** provider **IP whitelist** (no SIP registration), single
-  authorized CLI enforced in the dialplan.
+- **Auth model:** provider **IP whitelist** (no SIP registration). Caller ID and
+  numbers are passed through unmodified — the provider screens CLI on their side.
 - **NPM role:** web/admin (80/443/81) only — never the SIP/RTP media path.
 
 > Deploy target on the VPS: copy the `sip-asterisk/` folder to
@@ -24,7 +24,7 @@ This repo is 100% complete except for two things that are **physically external*
 to this machine and must not be guessed:
 
 1. **Provider values** → fill into `sip-asterisk/.env`
-   (gateway IP, signaling IP(s), RTP IP(s), authorized CLI). See
+   (gateway IP, signaling IP(s), RTP IP(s)). See
    [docs/provider-onboarding.md](sip-asterisk/docs/provider-onboarding.md).
 2. **SSH execution on the VPS** → you run the `scripts/` on your server.
    Never paste your private SSH key anywhere.
@@ -39,13 +39,13 @@ Each phase maps to the original plan stages and to a concrete artifact/command.
 
 | Phase | What | Plan stage | Artifact / command | Where |
 |------:|------|-----------|--------------------|-------|
-| **0** | Gather provider requirements + authorized CLI | §2, §3 (info), §12 | `docs/provider-onboarding.md`, fill `.env` | off-server |
+| **0** | Gather provider requirements (IPs) | §2, §3 (info), §12 | `docs/provider-onboarding.md`, fill `.env` | off-server |
 | **1** | Find/test the SSH key | §4 | `scripts/00-ssh-discovery.{sh,ps1}` | local PC |
 | **2** | VPS preflight audit + backups + **snapshot** | §5 | `scripts/01-preflight-audit.sh` | VPS |
 | **3** | DNS validation | §6 | `scripts/02-dns-validation.sh` | anywhere |
 | **4** | Firewall / ports (UFW) | §7 | `scripts/03-firewall-setup.sh` | VPS |
 | **5** | Stack scaffolding (dirs, Dockerfile, compose) | §5–§7 | `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh` | VPS |
-| **6** | Asterisk config (pjsip/rtp/dialplan/CLI) | §8, §9 | `config-templates/*.conf` → `render-config.sh` | VPS |
+| **6** | Asterisk config (pjsip/rtp/dialplan) | §8, §9 | `config-templates/*.conf` → `render-config.sh` | VPS |
 | **7** | Build, deploy, verify | §10 | `scripts/04-deploy.sh`, `scripts/05-verify-asterisk.sh` | VPS |
 | **8** | NPM web/admin (keep off SIP/RTP) | §11 | `docs/npm-configuration.md` | VPS/NPM |
 | **9** | Provider onboarding (whitelist our IP) | §12 | `docs/provider-onboarding.md` | provider |
@@ -68,7 +68,7 @@ cd /opt/stacks/sip-asterisk
 
 # 1. Configure
 cp .env.example .env
-nano .env                      # fill provider IPs + AUTHORIZED_CLI + ADMIN_IP
+nano .env                      # fill provider IPs + ADMIN_IP (CLI is pass-through)
 
 # 2. Firewall (dry-run first, then apply)
 bash scripts/03-firewall-setup.sh
@@ -88,7 +88,7 @@ docker logs -f sip-asterisk
 
 ```
 sip-asterisk/
-  .env.example            # fill -> .env (provider IPs, CLI, admin IP)
+  .env.example            # fill -> .env (provider IPs, admin IP)
   .gitattributes          # forces LF for shell/conf (container safety)
   .gitignore
   Dockerfile              # Asterisk 22 (Sangoma/FreePBX Debian 12 repo)
@@ -130,8 +130,10 @@ sip-asterisk/
 - Do **not** paste private SSH keys into chat, tickets, or files.
 - Do **not** install native FreePBX on this shared Docker/NPM host without a
   snapshot and conflict review.
-- Do **not** send any caller ID the provider has not authorized.
-- Do **not** enable international/premium routes until fraud controls are active.
+- CLI / number screening is the **provider's** responsibility (full pass-through
+  here) — ensure your CLI usage complies with your provider agreement and local law.
+- Destination / international / premium policy is enforced **provider-side** (no
+  local blocks).
 
 A misconfigured public SIP server can generate large fraud bills. Complete
 Phase 11 (security hardening) before/with go-live.
