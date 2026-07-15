@@ -20,7 +20,7 @@ set -a; . "$ENV_FILE"; set +a
 
 # Required values must be present and non-empty.
 REQUIRED=(PUBLIC_IP SIP_DOMAIN SIP_PORT RTP_START RTP_END \
-          PROVIDER_GATEWAY_IP PROVIDER_SIGNALING_IP)
+          PROVIDER_GATEWAY_IP PROVIDER_SIGNALING_IP OUTBOUND_PROVIDER_PREFIX MICROSIP_EXTEN MICROSIP_PASSWORD MICROSIP_ALLOWED_IP)
 missing=()
 for k in "${REQUIRED[@]}"; do
     [ -z "${!k:-}" ] && missing+=("$k")
@@ -34,7 +34,7 @@ mkdir -p etc
 
 # Tokens that templates may contain.
 TOKENS=(TZ PUBLIC_IP SIP_DOMAIN SIP_PORT RTP_START RTP_END \
-        PROVIDER_GATEWAY_IP PROVIDER_SIGNALING_IP)
+        PROVIDER_GATEWAY_IP PROVIDER_SIGNALING_IP OUTBOUND_PROVIDER_PREFIX MICROSIP_EXTEN MICROSIP_PASSWORD MICROSIP_ALLOWED_IP)
 
 shopt -s nullglob
 for tpl in config-templates/*.conf; do
