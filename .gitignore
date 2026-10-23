@@ -18,3 +18,10 @@ sip-asterisk/backup/
 # OS / editor junk
 Thumbs.db
 .DS_Store
+
+# CLI panel runtime data (change history + config backups)
+cli-panel/data/
+
+# Python bytecode
+__pycache__/
+*.pyc

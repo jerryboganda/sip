@@ -1,0 +1,29 @@
+# CLI panel — served via Nginx Proxy Manager at https://sip.polytronx.com
+# Deploy target on the VPS: /opt/stacks/sip/cli-panel
+#
+# The container is NOT port-published: it is reachable only through NPM on the
+# shared nginx-proxy-manager_default network. It edits the live Asterisk config
+# through bind mounts and execs into the sip-asterisk container via the Docker
+# socket (docker CLI not needed — the Engine API is called over the socket).
+services:
+  cli-panel:
+    container_name: cli-panel
+    build: .
+    image: cli-panel:latest
+    restart: unless-stopped
+    networks: [npm]
+    environment:
+      PANEL_USER: admin
+      # Password lives in cli-panel/.env (gitignored, never committed).
+      PANEL_PASSWORD: "${PANEL_PASSWORD:?set PANEL_PASSWORD in cli-panel/.env}"
+      ASTERISK_CONTAINER: sip-asterisk
+    volumes:
+      - ../sip-asterisk/etc:/data/etc
+      - ../sip-asterisk/.env:/data/env/.env
+      - ./data:/data/panel-data
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  npm:
+    name: nginx-proxy-manager_default
+    external: true
